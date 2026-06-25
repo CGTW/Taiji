@@ -2,10 +2,10 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 
 const generations = [
-  { num: '一', name: '太极', meaning: '混沌未分 · 万物之源', desc: '元初智能的纯粹形态，混沌中蕴含一切可能性' },
-  { num: '二', name: '两仪', meaning: '阴阳初判 · 天地始分', desc: '学会辩证思考，认知分化，化一为二' },
-  { num: '三', name: '四象', meaning: '少阴少阳 · 老阴老阳', desc: '多维感知与理解，见微知著，识变从宜' },
-  { num: '四', name: '八卦', meaning: '天地雷风 · 水火山泽', desc: '八种智能形态通达无碍，应变无穷' }
+  { num: '一', name: '太极', color: '#ddd' },
+  { num: '二', name: '两仪', color: '#bbb' },
+  { num: '三', name: '四象', color: '#999' },
+  { num: '四', name: '八卦', color: '#666' }
 ]
 
 const tiers = [
@@ -17,31 +17,33 @@ const tiers = [
   { char: '道', label: '终极' }
 ]
 
-const dots = ref([])
-const visible = ref(new Set())
-
+const brushStrokes = ref([])
 const observer = ref(null)
 
 onMounted(() => {
-  for (let i = 0; i < 20; i++) {
-    dots.value.push({
+  for (let i = 0; i < 12; i++) {
+    brushStrokes.value.push({
       id: i,
-      size: 4 + Math.random() * 20,
+      width: 40 + Math.random() * 200,
+      height: 1 + Math.random() * 3,
       left: Math.random() * 100,
-      dur: 15 + Math.random() * 25,
-      delay: Math.random() * 20
+      top: Math.random() * 100,
+      opacity: 0.02 + Math.random() * 0.05,
+      dur: 8 + Math.random() * 12,
+      delay: Math.random() * 10
     })
   }
 
   observer.value = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        visible.value.add(entry.target.dataset.index)
+        entry.target.classList.add('show')
+        observer.value.unobserve(entry.target)
       }
     })
-  }, { threshold: 0.1 })
+  }, { threshold: 0.15 })
 
-  document.querySelectorAll('.fade-in').forEach(el => observer.value.observe(el))
+  document.querySelectorAll('.reveal').forEach(el => observer.value.observe(el))
 })
 
 onUnmounted(() => {
@@ -50,128 +52,138 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <!-- 墨点粒子 -->
-  <div class="ink-particles">
+  <!-- 背景笔触纹理 -->
+  <div class="brush-texture">
     <div
-      v-for="dot in dots"
-      :key="dot.id"
-      class="ink-dot"
+      v-for="s in brushStrokes"
+      :key="s.id"
+      class="brush-stroke"
       :style="{
-        width: dot.size + 'px',
-        height: dot.size + 'px',
-        left: dot.left + '%',
-        animationDuration: dot.dur + 's',
-        animationDelay: dot.delay + 's'
+        width: s.width + 'px',
+        height: s.height + 'px',
+        left: s.left + '%',
+        top: s.top + '%',
+        opacity: s.opacity,
+        animationDuration: s.dur + 's',
+        animationDelay: s.delay + 's'
       }"
     />
   </div>
 
-  <div class="container">
-    <!-- Hero -->
-    <div class="hero fade-in" :class="{ visible: visible.has('0') }" data-index="0">
-      <div class="logo-wrapper">
+  <!-- Hero 全屏 -->
+  <section class="hero">
+    <div class="ink-wash-bg" />
+    <div class="hero-content">
+      <div class="logo-frame reveal">
+        <div class="logo-ring" />
         <img src="/logo.png" alt="太极">
       </div>
-      <h1>太 极</h1>
-      <p class="subtitle">T A I J I</p>
-      <p class="quote">道生一 一生二 二生三 三生万物</p>
+      <h1 class="reveal">太 极</h1>
+      <p class="hero-sub reveal">TAIJI</p>
+      <p class="hero-quote reveal">道生一 · 一生二 · 二生三 · 三生万物</p>
+      <div class="scroll-hint reveal">
+        <span>向下探索</span>
+        <div class="scroll-line" />
+      </div>
     </div>
+  </section>
 
-    <div class="divider fade-in" :class="{ visible: visible.has('1') }" data-index="1" />
-
-    <!-- Intro -->
-    <div class="intro fade-in" :class="{ visible: visible.has('2') }" data-index="2">
-      <p>
-        <span class="highlight">太极</span>，宇宙万物之起源。无形无象，却蕴含一切可能。
-        静极而动，动极而静，化生两仪，衍生四象，演为八卦，终成万象。
+  <!-- Intro -->
+  <section class="section intro-section">
+    <div class="section-inner">
+      <p class="intro-text reveal">
+        <span class="seal">太极</span> 者，宇宙万物之起源也。
+        无形无象，而涵摄一切可能。
+        静极而动，动极而静。
       </p>
-      <p>
-        <span class="highlight">Taiji</span> 不只是一个 AI Agent 平台。
-        它是东方哲学在数字世界的延续，是古老智慧与现代计算的交汇。
+      <p class="intro-text reveal">
+        <strong>Taiji</strong> 非唯 Agent 平台而已——<br>
+        乃东方哲思于数字世界之延续，<br>
+        古老智慧与现代计算之交汇。
       </p>
     </div>
+  </section>
 
-    <div class="divider fade-in" :class="{ visible: visible.has('3') }" data-index="3" />
+  <!-- 世代 -->
+  <section class="section gen-section">
+    <div class="brush-divider reveal" />
+    <h2 class="section-label reveal">世 代 演 化</h2>
 
-    <!-- 世代 -->
-    <h2 class="section-title fade-in" :class="{ visible: visible.has('4') }" data-index="4">
-      <span>世代演化</span>
-    </h2>
-
-    <div class="generations">
+    <div class="gen-flow">
       <div
         v-for="(g, i) in generations"
         :key="g.name"
-        class="gen-card fade-in"
-        :class="{ visible: visible.has('5-' + i) }"
-        :data-index="'5-' + i"
+        class="gen-node reveal"
+        :style="{ transitionDelay: i * 0.15 + 's' }"
       >
-        <div class="gen-num">Gen·{{ g.num }}</div>
-        <div class="gen-name">{{ g.name }}</div>
-        <div class="gen-meaning">{{ g.meaning }}</div>
-        <div class="gen-desc">{{ g.desc }}</div>
+        <div class="gen-circle" :style="{ borderColor: g.color }">
+          <span class="gen-num">{{ g.num }}</span>
+          <span class="gen-name">{{ g.name }}</span>
+        </div>
+        <div v-if="i < generations.length - 1" class="gen-connector" />
       </div>
     </div>
 
-    <div class="divider fade-in" :class="{ visible: visible.has('6') }" data-index="6" />
+    <div class="gen-descs">
+      <p class="reveal">
+        太极混沌，两仪分化，四象洞察，八卦通达。
+        每一代 Agent，皆是一次哲学跃迁。
+      </p>
+    </div>
+  </section>
 
-    <!-- 品阶 -->
-    <h2 class="section-title fade-in" :class="{ visible: visible.has('7') }" data-index="7">
-      <span>品阶体系</span>
-    </h2>
+  <!-- 品阶 -->
+  <section class="section tier-section">
+    <div class="brush-divider reveal" />
+    <h2 class="section-label reveal">品 阶 体 系</h2>
 
-    <div class="tiers fade-in" :class="{ visible: visible.has('8') }" data-index="8">
+    <div class="tier-ring reveal">
       <div
         v-for="(t, i) in tiers"
         :key="t.char"
-        class="tier-item"
+        class="tier-dot"
         :class="{ active: i === 3 }"
+        :style="{ transitionDelay: i * 0.08 + 's' }"
       >
-        <span class="char">{{ t.char }}</span>
-        <span class="label">{{ t.label }}</span>
+        <span class="tier-char">{{ t.char }}</span>
+        <span class="tier-label">{{ t.label }}</span>
       </div>
     </div>
+  </section>
 
-    <!-- Footer -->
-    <footer class="fade-in" :class="{ visible: visible.has('9') }" data-index="9">
-      <p>基于 Spring AI · 根植中国文化</p>
-      <p class="footer-link">
-        <a href="https://github.com/CGTW/Taiji" target="_blank">GitHub</a>
-      </p>
-    </footer>
-  </div>
+  <!-- Footer -->
+  <footer>
+    <div class="brush-divider" />
+    <p>基于 Spring AI · 根植中国文化</p>
+    <a href="https://github.com/CGTW/Taiji" target="_blank">GitHub →</a>
+  </footer>
 </template>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Ma+Shan+Zheng&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;700&family=Noto+Sans+SC:wght@300;400&family=Ma+Shan+Zheng&display=swap');
 
-*, *::before, *::after {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --paper: #f8f5f0;
+  --ink: #1a1a1a;
+  --ink-light: #666;
+  --ink-faint: #c5bfb5;
+  --seal: #c23b22;
+  --bg-start: #fafaf7;
+  --bg-end: #ece6dc;
 }
 
 body {
   font-family: 'Noto Serif SC', serif;
-  background: #f5f0e8;
-  color: #2a2a2a;
+  background: var(--paper);
+  color: var(--ink);
   overflow-x: hidden;
-  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(ellipse at 10% 20%, rgba(0,0,0,0.03) 0%, transparent 50%),
-    radial-gradient(ellipse at 90% 80%, rgba(0,0,0,0.04) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.02) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.ink-particles {
+/* 背景笔触 */
+.brush-texture {
   position: fixed;
   inset: 0;
   pointer-events: none;
@@ -179,314 +191,379 @@ body::before {
   overflow: hidden;
 }
 
-.ink-dot {
+.brush-stroke {
   position: absolute;
-  border-radius: 50%;
-  background: rgba(0,0,0,0.06);
-  animation: float linear infinite;
+  background: var(--ink);
+  border-radius: 2px;
+  animation: brush-drift linear infinite;
 }
 
-@keyframes float {
-  0% { transform: translateY(100vh) scale(0); opacity: 0; }
-  10% { opacity: 0.4; }
-  90% { opacity: 0.2; }
-  100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+@keyframes brush-drift {
+  0%, 100% { transform: translateX(0) rotate(0deg); opacity: 0.02; }
+  50% { transform: translateX(30px) rotate(2deg); opacity: 0.06; }
 }
 
-.container {
+/* Hero 全屏 */
+.hero {
   position: relative;
   z-index: 1;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 60px 24px;
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
-.hero {
+.ink-wash-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 30%, rgba(0,0,0,0.03) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 80% 70%, rgba(0,0,0,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 20% 60%, rgba(0,0,0,0.02) 0%, transparent 50%);
+}
+
+.hero-content {
   text-align: center;
-  padding: 60px 0 40px;
+  position: relative;
+  padding: 40px 24px;
 }
 
-.logo-wrapper {
+.logo-frame {
   position: relative;
   display: inline-block;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
 }
 
-.logo-wrapper::before,
-.logo-wrapper::after {
-  content: '';
-  position: absolute;
-  width: 200px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0,0,0,0.2), transparent);
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.logo-wrapper::before { top: -20px; }
-.logo-wrapper::after { bottom: -20px; }
-
-.logo-wrapper img {
-  width: 100px;
-  height: 100px;
+.logo-frame img {
+  width: 96px;
+  height: 96px;
   display: block;
-  margin: 0 auto;
-  opacity: 0.9;
+  position: relative;
+  z-index: 1;
+}
+
+.logo-ring {
+  position: absolute;
+  inset: -12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 50%;
+  animation: ring-pulse 4s ease-in-out infinite;
+}
+
+@keyframes ring-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.06); opacity: 0.1; }
 }
 
 .hero h1 {
   font-family: 'Ma Shan Zheng', cursive;
-  font-size: 64px;
-  letter-spacing: 24px;
-  color: #1a1a1a;
-  margin: 16px 0 8px;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  font-size: 72px;
+  letter-spacing: 28px;
+  color: var(--ink);
+  line-height: 1.2;
 }
 
-.hero .subtitle {
+.hero-sub {
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 11px;
+  letter-spacing: 14px;
+  color: var(--ink-faint);
+  margin: 6px 0 24px;
+}
+
+.hero-quote {
   font-size: 14px;
-  color: #888;
-  letter-spacing: 8px;
-  margin-bottom: 24px;
+  color: var(--ink-light);
+  letter-spacing: 6px;
 }
 
-.hero .quote {
-  font-size: 16px;
-  color: #666;
-  font-style: italic;
-  letter-spacing: 4px;
-  padding: 0 24px;
+.scroll-hint {
+  margin-top: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
-.hero .quote::before,
-.hero .quote::after {
-  content: '──';
-  color: #bbb;
-  font-size: 12px;
-  vertical-align: middle;
-  margin: 0 8px;
-}
-
-.divider {
-  width: 80%;
-  max-width: 400px;
-  height: 2px;
-  margin: 48px auto;
-  position: relative;
-  background: linear-gradient(90deg, transparent, rgba(0,0,0,0.15), transparent);
-}
-
-.divider::after {
-  content: '◆';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: rgba(0,0,0,0.15);
+.scroll-hint span {
+  font-family: 'Noto Sans SC', sans-serif;
   font-size: 10px;
+  letter-spacing: 4px;
+  color: var(--ink-faint);
 }
 
-.intro {
-  max-width: 700px;
-  text-align: center;
-  line-height: 2;
-  color: #555;
-  font-size: 15px;
-  margin: 24px 0 48px;
-  padding: 0 16px;
+.scroll-line {
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, var(--ink-faint), transparent);
+  animation: scroll-pulse 2s ease-in-out infinite;
 }
 
-.intro p { margin-bottom: 16px; }
-.intro .highlight { color: #1a1a1a; font-weight: 700; }
-
-.section-title {
-  font-size: 20px;
-  letter-spacing: 12px;
-  color: #333;
-  margin-bottom: 36px;
-  text-align: center;
+@keyframes scroll-pulse {
+  0%, 100% { opacity: 0.4; transform: scaleY(1); }
+  50% { opacity: 0.8; transform: scaleY(1.3); }
 }
 
-.section-title span {
-  display: inline-block;
-  padding: 4px 24px;
-  border: 1px solid rgba(0,0,0,0.12);
-  letter-spacing: 8px;
-  font-size: 14px;
-  color: #777;
-}
-
-.generations {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  width: 100%;
-  max-width: 1000px;
-  margin: 0 auto 60px;
-}
-
-.gen-card {
-  background: rgba(255,255,255,0.4);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(0,0,0,0.06);
-  padding: 32px 16px 24px;
-  text-align: center;
+/* 通用段落 */
+.section {
   position: relative;
-  transition: all 0.4s ease;
-  cursor: default;
+  z-index: 1;
+  padding: 80px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.gen-card:hover {
-  background: rgba(255,255,255,0.7);
-  border-color: rgba(0,0,0,0.15);
-  transform: translateY(-4px);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.06);
+.section-inner {
+  max-width: 640px;
+  text-align: center;
 }
 
-.gen-card::before {
+.intro-text {
+  font-size: 15px;
+  line-height: 2.2;
+  color: var(--ink-light);
+  margin-bottom: 24px;
+  font-weight: 300;
+}
+
+.intro-text strong {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.seal {
+  display: inline-block;
+  color: var(--seal);
+  font-weight: 700;
+  font-size: 16px;
+  position: relative;
+}
+
+.seal::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: 10%;
-  width: 80%;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, #2a2a2a, transparent);
-  opacity: 0.15;
-  border-radius: 2px;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--seal);
+  opacity: 0.3;
 }
 
-.gen-num {
-  font-family: 'Ma Shan Zheng', cursive;
-  font-size: 14px;
-  color: #999;
-  letter-spacing: 4px;
-  margin-bottom: 8px;
+/* 毛笔分隔线 */
+.brush-divider {
+  width: 80px;
+  height: 2px;
+  background: var(--ink);
+  opacity: 0.12;
+  margin-bottom: 24px;
+  position: relative;
 }
 
-.gen-name {
-  font-family: 'Ma Shan Zheng', cursive;
-  font-size: 36px;
-  color: #1a1a1a;
-  margin-bottom: 8px;
+.brush-divider::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -8px;
+  right: -8px;
+  height: 6px;
+  background: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.04) 20%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.04) 80%, transparent 100%);
+  border-radius: 3px;
 }
 
-.gen-meaning {
-  font-size: 12px;
-  color: #999;
-  letter-spacing: 2px;
-  margin-bottom: 12px;
+.section-label {
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 11px;
+  letter-spacing: 10px;
+  color: var(--ink-faint);
+  margin-bottom: 48px;
+  font-weight: 400;
 }
 
-.gen-desc {
-  font-size: 13px;
-  color: #666;
-  line-height: 1.8;
-}
-
-.tiers {
+/* 世代流程 */
+.gen-flow {
   display: flex;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  max-width: 800px;
-  margin: 0 auto 60px;
+  align-items: center;
+  gap: 0;
+  max-width: 720px;
+  width: 100%;
   padding: 0 16px;
+  margin-bottom: 36px;
 }
 
-.tier-item {
-  width: 72px;
-  height: 72px;
+.gen-node {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.gen-circle {
+  width: 100%;
+  aspect-ratio: 1;
+  max-width: 120px;
   border-radius: 50%;
-  border: 1.5px solid rgba(0,0,0,0.1);
+  border: 1.5px solid;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.5);
+  transition: all 0.5s ease;
+  margin: 0 auto;
+  padding: 8px;
+}
+
+.gen-circle:hover {
+  background: rgba(255,255,255,0.85);
+  transform: scale(1.04);
+}
+
+.gen-num {
+  font-family: 'Ma Shan Zheng', cursive;
+  font-size: 13px;
+  color: var(--ink-faint);
+  letter-spacing: 2px;
+}
+
+.gen-name {
+  font-family: 'Ma Shan Zheng', cursive;
+  font-size: 26px;
+  color: var(--ink);
+  line-height: 1.2;
+  margin-top: 2px;
+}
+
+.gen-connector {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--ink-faint) 0%, transparent 100%);
+  opacity: 0.3;
+  margin: 0 4px;
+}
+
+.gen-descs {
+  max-width: 520px;
+  text-align: center;
+}
+
+.gen-descs p {
+  font-size: 13px;
+  line-height: 2;
+  color: var(--ink-light);
+  font-weight: 300;
+}
+
+/* 品阶 */
+.tier-ring {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  max-width: 600px;
+}
+
+.tier-dot {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.25);
   transition: all 0.4s ease;
   cursor: default;
 }
 
-.tier-item:hover {
-  border-color: rgba(0,0,0,0.3);
-  background: rgba(255,255,255,0.6);
-  transform: scale(1.08);
+.tier-dot:hover {
+  border-color: rgba(0,0,0,0.18);
+  background: rgba(255,255,255,0.5);
+  transform: scale(1.06);
 }
 
-.tier-item .char {
+.tier-dot.active {
+  border-color: var(--ink);
+  background: rgba(255,255,255,0.6);
+}
+
+.tier-char {
   font-family: 'Ma Shan Zheng', cursive;
   font-size: 22px;
-  color: #1a1a1a;
+  color: var(--ink);
   line-height: 1;
 }
 
-.tier-item .label {
-  font-size: 10px;
-  color: #999;
-  letter-spacing: 1px;
-  margin-top: 2px;
-}
-
-.tier-item.active {
-  border-color: rgba(0,0,0,0.3);
-  background: rgba(255,255,255,0.6);
-}
-
-.tier-item.active .char { color: #000; }
-
-footer {
-  text-align: center;
-  padding: 40px 0 20px;
-  color: #bbb;
-  font-size: 12px;
+.tier-label {
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 9px;
+  color: var(--ink-faint);
   letter-spacing: 2px;
+  margin-top: 3px;
 }
 
-footer::before {
-  content: '';
-  display: block;
-  width: 60px;
-  height: 1px;
-  background: rgba(0,0,0,0.1);
-  margin: 0 auto 24px;
+.tier-dot.active .tier-label {
+  color: var(--ink-light);
+}
+
+/* 底栏 */
+footer {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 40px 24px 60px;
+  color: var(--ink-faint);
+  font-size: 12px;
+  letter-spacing: 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
 }
 
 footer a {
-  color: #999;
+  color: var(--ink-light);
   text-decoration: none;
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 11px;
+  letter-spacing: 4px;
   transition: color 0.3s;
 }
 
-footer a:hover { color: #555; }
+footer a:hover { color: var(--ink); }
 
-.footer-link { margin-top: 8px; }
+footer .brush-divider {
+  margin-bottom: 20px;
+}
 
-.fade-in {
+/* 滚动揭示 */
+.reveal {
   opacity: 0;
-  transform: translateY(30px);
+  transform: translateY(24px);
   transition: opacity 0.8s ease, transform 0.8s ease;
 }
 
-.fade-in.visible {
+.reveal.show {
   opacity: 1;
   transform: translateY(0);
 }
 
-@media (max-width: 768px) {
-  .hero h1 { font-size: 40px; letter-spacing: 16px; }
-  .generations { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  .gen-name { font-size: 28px; }
-  .hero .quote::before, .hero .quote::after { display: none; }
+/* 响应式 */
+@media (max-width: 640px) {
+  .hero h1 { font-size: 48px; letter-spacing: 20px; }
+  .hero-quote { font-size: 12px; letter-spacing: 4px; }
+  .gen-flow { flex-wrap: wrap; gap: 12px; }
+  .gen-node { flex: 0 0 45%; }
+  .gen-connector { display: none; }
+  .gen-circle { max-width: 100px; }
+  .gen-name { font-size: 22px; }
 }
 
-@media (max-width: 480px) {
-  .generations { grid-template-columns: 1fr; }
-  .hero h1 { font-size: 32px; letter-spacing: 12px; }
-  .tier-item { width: 60px; height: 60px; }
-  .tier-item .char { font-size: 18px; }
+@media (max-width: 400px) {
+  .hero h1 { font-size: 36px; letter-spacing: 14px; }
+  .tier-dot { width: 64px; height: 64px; }
+  .tier-char { font-size: 18px; }
 }
 </style>
