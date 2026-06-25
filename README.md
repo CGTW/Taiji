@@ -1,6 +1,6 @@
 
 <p align="center">
-  <img src="taiji.svg" width="120" height="120" alt="Taiji 太极">
+  <img src="logo.png" width="120" height="120" alt="Taiji 太极">
   <br>
   <h1 align="center" style="font-size: 3em; letter-spacing: 0.5em;">太 极</h1>
   <p align="center"><strong><code>Taiji</code></strong></p>
