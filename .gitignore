@@ -34,6 +34,9 @@ build/
 
 ### OpenCode ###
 .opencode/
+task_plan.md
+progress.md
+findings.md
 
 ### Frontend ###
 frontend/node_modules/
