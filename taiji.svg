@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <!-- 白色背景圈，暗色模式下可见 -->
+  <circle cx="60" cy="60" r="60" fill="#fff"/>
+  <!-- 外圈 -->
+  <circle cx="60" cy="60" r="58" fill="none" stroke="#111" stroke-width="2"/>
+  <!-- 阴鱼（黑色半边） -->
+  <path d="M60 2 A58 58 0 0 1 60 118 A29 29 0 0 1 60 60 A29 29 0 0 0 60 2Z" fill="#111"/>
+  <!-- 阴鱼眼（白点） -->
+  <circle cx="60" cy="30" r="8" fill="#fff"/>
+  <!-- 阳鱼眼（黑点） -->
+  <circle cx="60" cy="90" r="8" fill="#111"/>
+</svg>

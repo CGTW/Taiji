@@ -1,9 +1,6 @@
 
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Ccircle cx='60' cy='60' r='58' fill='none' stroke='%23e0e0e0' stroke-width='2'/%3E%3Cpath d='M60 2 A58 58 0 0 1 60 118 A29 29 0 0 1 60 60 A29 29 0 0 0 60 2Z' fill='%23888888' opacity='0.6'/%3E%3Ccircle cx='60' cy='30' r='8' fill='%23ffffff'/%3E%3Ccircle cx='60' cy='90' r='8' fill='%23888888'/%3E%3C/svg%3E">
-    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Ccircle cx='60' cy='60' r='58' fill='none' stroke='%23333' stroke-width='2'/%3E%3Cpath d='M60 2 A58 58 0 0 1 60 118 A29 29 0 0 1 60 60 A29 29 0 0 0 60 2Z' fill='%23333' opacity='0.6'/%3E%3Ccircle cx='60' cy='30' r='8' fill='%23fff'/%3E%3Ccircle cx='60' cy='90' r='8' fill='%23333'/%3E%3C/svg%3E" width="120" height="120">
-  </picture>
+  <img src="taiji.svg" width="120" height="120" alt="Taiji 太极">
   <br>
   <h1 align="center" style="font-size: 3em; letter-spacing: 0.5em;">太 极</h1>
   <p align="center"><strong><code>Taiji</code></strong></p>
