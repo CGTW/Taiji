@@ -34,6 +34,15 @@ build/
 
 ### OpenCode ###
 .opencode/
+
+### Environment variables ###
+.env
+.env.local
+
+### Runtime logs ###
+*.log
+*.err
+
 task_plan.md
 progress.md
 findings.md
