@@ -10,7 +10,18 @@
     </parent>
 
     <artifactId>taiji-practice</artifactId>
-    <description>练习模块 —— 用于学习，可随时删除</description>
+    <!--
+        🏭 Layer 2 — 练习 / 实验模块
+        ─────────────────────────────
+        作用：快速实验 / 测试 / 学习 Taiji 功能的沙盒
+        依赖：taiji-core（可以直接使用 LLM 客户端、Agent 等）
+
+        特点：
+          • 自带 spring-boot-starter-web（可独立启动验证）
+          • 可随时删除，不影响主线模块
+          • 适合写各种测试 Controller、实验代码
+    -->
+    <description>🏭 [练习] 实验沙盒 / 可随时删除 / 依赖 core</description>
 
     <dependencies>
         <!-- 引入 core 模块，可以直接使用它的 LLM 客户端、Agent 等 -->
@@ -18,6 +29,7 @@
             <groupId>com.agent</groupId>
             <artifactId>taiji-core</artifactId>
         </dependency>
+
 
         <dependency>
             <groupId>org.springframework.boot</groupId>

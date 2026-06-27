@@ -1,13 +1,13 @@
-package com.agent.taiji.server;
+package com.agent.taiji.practice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication(scanBasePackages = "com.agent.taiji")
-public class TaijiApplication {
+public class PracticeApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(TaijiApplication.class, args);
+        SpringApplication.run(PracticeApplication.class, args);
     }
 
 }

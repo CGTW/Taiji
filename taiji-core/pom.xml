@@ -10,28 +10,40 @@
     </parent>
 
     <artifactId>taiji-core</artifactId>
-    <description>Agent 核心：LLM 客户端、工具调用、记忆管理、Agent 编排</description>
+    <!--
+        🧱 Layer 1 — 核心业务模块
+        ──────────────────────────
+        作用：Agent 的"大脑"，所有智能体能力中心
+        依赖：taiji-common（地基）
+
+        提供能力：
+          • LLM 客户端封装（支持多模型）
+          • Agent 编排引擎（ReAct / Plan-and-Execute）
+          • 工具调用框架 (@Tool 注解支持)
+          • 记忆管理（短期 / 长期记忆）
+          • Chat History 管理
+    -->
+    <description>🧱 [核心] Agent 编排 / LLM 客户端 / 工具调用 / 记忆管理</description>
 
     <dependencies>
-        <!-- 公共模块 -->
+        <!-- ⬇️ 依赖地基模块 -->
         <dependency>
             <groupId>com.agent</groupId>
             <artifactId>taiji-common</artifactId>
         </dependency>
 
-        <!-- Spring AI: OpenAI -->
+        <!--
+            Spring AI: OpenAI 模型起步依赖
+            提供 ChatClient / ChatMemory / ToolCalling 等
+            ⚠ 注意：Spring AI 2.x 改版了 artifact 命名，
+              旧版 spring-ai-openai-spring-boot-starter 已不存在
+        -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
+            <artifactId>spring-ai-starter-model-openai</artifactId>
         </dependency>
 
-        <!-- Spring AI: Ollama（本地开发） -->
-        <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-ollama-spring-boot-starter</artifactId>
-        </dependency>
-
-        <!-- Spring Context（Tool 注解等） -->
+        <!-- Spring Context（用于 @Tool 注解、事件监听等） -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>

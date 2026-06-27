@@ -10,7 +10,23 @@
     </parent>
 
     <artifactId>taiji-server</artifactId>
-    <description>服务入口：启动类、REST API、配置</description>
+    <!--
+        🏭 Layer 2 — 部署入口模块
+        ──────────────────────────
+        作用：最终的 Spring Boot 可运行应用
+        依赖：taiji-core + taiji-knowledge（聚合所有业务能力）
+
+        职责：
+          • 包含 @SpringBootApplication 启动类
+          • 定义 REST API 端点（Controller）
+          • 统一配置（application.yml）
+          • 聚合所有业务模块为可部署的 fat jar
+
+        前端关联：
+          • 运行在端口 8080
+          • 前端 (port 3000) 通过 Vite proxy 转发 /api/* 到此模块
+    -->
+    <description>🏭 [部署入口] Spring Boot 启动 / REST API / 聚合所有模块</description>
 
     <dependencies>
         <!-- 聚合所有业务模块 -->

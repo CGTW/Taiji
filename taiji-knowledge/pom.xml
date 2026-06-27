@@ -10,7 +10,19 @@
     </parent>
 
     <artifactId>taiji-knowledge</artifactId>
-    <description>知识库模块：RAG、向量存储、文档解析</description>
+    <!--
+        🧱 Layer 1 — 知识库模块
+        ────────────────────────
+        作用：Agent 的"长期记忆 / 知识库"，RAG 能力中心
+        依赖：taiji-common（地基）
+
+        提供能力：
+          • RAG 检索增强生成（向量搜索 + LLM 生成）
+          • PGVector 向量存储（文档 Embedding 持久化）
+          • 文档解析（PDF / Tika 支持）
+          • 文档分段 / 索引管理
+    -->
+    <description>🧱 [知识库] RAG / 向量存储 (PGVector) / 文档解析</description>
 
     <dependencies>
         <!-- 公共模块 -->
@@ -19,10 +31,14 @@
             <artifactId>taiji-common</artifactId>
         </dependency>
 
-        <!-- Spring AI: PGVector 向量存储 -->
+        <!--
+            Spring AI: PGVector 向量存储起步依赖
+            ⚠ 注意：Spring AI 2.x artifact 改名，
+              旧版 spring-ai-pgvector-store-spring-boot-starter 已不存在
+        -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-pgvector-store-spring-boot-starter</artifactId>
+            <artifactId>spring-ai-starter-vector-store-pgvector</artifactId>
         </dependency>
 
         <!-- Spring AI: 文档读取器 -->

@@ -17,17 +17,51 @@
     <name>Taiji</name>
     <description>Taiji - AI Agent 平台 (多模块)</description>
 
+    <!--
+        ═══════════════════════════════════════════════════════════════
+        模块依赖分层（自底向上）：
+        ═══════════════════════════════════════════════════════════════
+
+        🏗 Layer 0 — 地基
+          taiji-common (无内部依赖)
+          └─ DTO / 异常 / 工具类 / Jackson / Validation
+
+        🧱 Layer 1 — 业务核心
+          taiji-core  → taiji-common
+          ├─ Agent 编排 / LLM 客户端 / 工具调用 / 记忆管理
+
+          taiji-knowledge → taiji-common
+          └─ RAG / 向量存储 (PGVector) / 文档解析 (PDF/Tika)
+
+        🏭 Layer 2 — 应用组装
+          taiji-practice → taiji-core
+          └─ 练习模块，用于测试/学习，可随时删除
+
+          taiji-server → taiji-core + taiji-knowledge
+          └─ Spring Boot 启动入口 / REST API / Actuator
+
+        🌐 独立层 — 前端 (不与后端 Maven 关联)
+          frontend/ (Vue 3 + Vite, 端口 3000)
+          └─ 通过 vite proxy → taiji-server (端口 8080)
+        ═══════════════════════════════════════════════════════════════
+    -->
+
     <modules>
+        <!-- 🏗 地基：无内部依赖的公共模块 -->
         <module>taiji-common</module>
+        <!-- 🧱 核心：Agent / LLM / 工具 / 记忆，依赖 common -->
         <module>taiji-core</module>
+        <!-- 🧱 知识库：RAG / 向量存储 / 文档解析，依赖 common -->
         <module>taiji-knowledge</module>
+        <!-- 🏭 部署入口：聚合 core + knowledge，启动 Spring Boot -->
         <module>taiji-server</module>
+        <!-- 🏭 练习模块：依赖 core，可随时删除 -->
         <module>taiji-practice</module>
     </modules>
 
     <properties>
         <java.version>17</java.version>
-        <spring-ai.version>1.0.0</spring-ai.version>
+        <spring-ai.version>2.0.0</spring-ai.version>
     </properties>
 
     <dependencyManagement>
@@ -41,7 +75,7 @@
                 <scope>import</scope>
             </dependency>
 
-            <!-- 子模块版本管理 -->
+            <!-- 🏗 内部模块版本统一管理 -->
             <dependency>
                 <groupId>com.agent</groupId>
                 <artifactId>taiji-common</artifactId>

@@ -38,6 +38,9 @@ task_plan.md
 progress.md
 findings.md
 
+### Design / Plans ###
+docs/
+
 ### Frontend ###
 frontend/node_modules/
 frontend/dist/

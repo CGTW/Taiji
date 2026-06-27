@@ -10,7 +10,20 @@
     </parent>
 
     <artifactId>taiji-common</artifactId>
-    <description>公共模块：DTO、异常、工具类</description>
+    <!--
+        🏗 Layer 0 — 地基模块
+        ──────────────────────
+        作用：被所有业务模块依赖，提供共享基础设施
+        依赖特征：不依赖任何内部模块（纯工具层）
+
+        提供能力：
+          • DTO / VO / 通用响应体
+          • 自定义异常体系
+          • Jackson 序列化配置
+          • Bean Validation 注解
+          • 通用工具类
+    -->
+    <description>🏗 [地基] DTO / 异常 / 工具类（所有模块的公共依赖）</description>
 
     <dependencies>
         <!-- JSON 序列化 -->
