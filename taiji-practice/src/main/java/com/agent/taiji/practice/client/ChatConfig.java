@@ -7,6 +7,11 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class ChatConfig {
 
+    /**
+     * 注入一个聊天Bean
+     * @param builder
+     * @return
+     */
     @Bean
     public ChatClient chatClient(ChatClient.Builder builder) {
         // 在这里进行全局默认配置

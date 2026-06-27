@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
 
 const generations = [
   { num: '一', name: '太极', phrase: '混沌未分 · 万物之源', desc: '元初智能之纯粹形态，混沌中蕴含一切可能', trigram: '☰', yao: '———' },
@@ -35,6 +35,8 @@ const quotes = [
   { text: '人法地，地法天，天法道，道法自然。', source: '道德经', chapter: '第二十五章' }
 ]
 
+const currentView = ref('home')
+
 const sections = ['hero', 'intro', 'quotes', 'features', 'generations', 'tiers', 'footer']
 const navLabels = ['太极', '道', '经', '用', '化', '品', '承']
 
@@ -57,6 +59,67 @@ const brushRotate = ref(-30)
 const brushScale = ref(1)
 let prevMX = 0
 let prevMY = 0
+
+const messages = ref([])
+const inputMessage = ref('')
+const chatLoading = ref(false)
+const chatContainer = ref(null)
+const chatInputRef = ref(null)
+
+let msgId = 0
+function addMessage(role, content) {
+  const id = ++msgId
+  messages.value.push({ role, content, id })
+  return id
+}
+
+let pendingAiId = null
+
+function sendMessage() {
+  const msg = inputMessage.value.trim()
+  if (!msg || chatLoading.value) return
+  inputMessage.value = ''
+  addMessage('user', msg)
+  chatLoading.value = true
+  pendingAiId = null
+
+  const eventSource = new EventSource(`/chat/taiji/chat?msg=${encodeURIComponent(msg)}`)
+
+  eventSource.onmessage = (event) => {
+    if (!pendingAiId) {
+      pendingAiId = addMessage('ai', event.data)
+    } else {
+      const target = messages.value.find(m => m.id === pendingAiId)
+      if (target) {
+        target.content += event.data
+        messages.value = [...messages.value]
+      }
+    }
+  }
+
+  eventSource.onerror = () => {
+    eventSource.close()
+    chatLoading.value = false
+    if (!pendingAiId) {
+      addMessage('ai', '抱歉，AI 服务暂时不可用，请稍后重试。')
+    }
+    pendingAiId = null
+  }
+}
+
+function onChatKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault()
+    sendMessage()
+  }
+}
+
+watch(messages, () => {
+  nextTick(() => {
+    const el = chatContainer.value?.querySelector('.chat-messages')
+    if (el) el.scrollTop = el.scrollHeight
+  })
+}, { deep: true })
 
 const quote = '道生一 · 一生二 · 二生三 · 三生万物'
 const typedQuote = computed(() => quote.slice(0, typedChars.value))
@@ -257,6 +320,16 @@ onUnmounted(() => {
   <!-- 水墨转场遮罩 -->
   <div class="ink-overlay" :style="{ opacity: inkOverlayOpacity }" />
 
+  <!-- 顶部导航 -->
+  <nav class="top-nav" :class="{ 'top-nav--visible': loaded }">
+    <div class="top-nav-brand" @click="currentView = 'home'">太 极</div>
+    <div class="top-nav-links">
+      <span class="top-nav-item" :class="{ active: currentView === 'home' }" @click="currentView = 'home'">首 页</span>
+      <span class="top-nav-item" :class="{ active: currentView === 'chat' }" @click="currentView = 'chat'">聊 天</span>
+    </div>
+  </nav>
+
+  <div v-if="currentView === 'home'">
   <!-- 固定导航 -->
   <nav class="ink-nav" :class="{ 'ink-nav--visible': loaded }">
     <div v-for="(label, i) in navLabels" :key="i" class="ink-nav-item" :class="{ active: activeSection === i }" @click="scrollToSection(i)">
@@ -286,14 +359,14 @@ onUnmounted(() => {
     }" />
   </div>
 
-  <!-- 毛笔光标 -->
-  <div class="brush-cursor" :style="{ left: brushX + 'px', top: brushY + 'px', transform: 'translate(-50%, -50%) rotate(' + brushRotate + 'deg) scale(' + brushScale + ')' }">
+  <!-- 毛笔光标（只在首页显示） -->
+  <div v-if="currentView === 'home'" class="brush-cursor" :style="{ left: brushX + 'px', top: brushY + 'px', transform: 'translate(-50%, -50%) rotate(' + brushRotate + 'deg) scale(' + brushScale + ')' }">
     <div class="brush-tip" />
     <div class="brush-ink-drop" />
   </div>
 
   <!-- 墨迹拖尾 -->
-  <div class="mouse-ink">
+  <div v-if="currentView === 'home'" class="mouse-ink">
     <div v-for="(m, i) in mouseInk" :key="i" class="m-ink-dot" :style="{
       left: m.x + 'px', top: m.y + 'px',
       opacity: m.life * (0.08 + Math.min(1, m.speed * 0.01)), transform: 'scale(' + (1 - m.life) * m.speed * 0.06 + ')',
@@ -532,6 +605,85 @@ onUnmounted(() => {
       </div>
     </div>
   </footer>
+  </div>
+
+  <!-- ===== 聊天页（独立视图） ===== -->
+  <div v-else class="chat-page">
+    <!-- 背景墨迹装饰 -->
+    <svg class="chat-bg-ink" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+      <path d="M200 100 Q400 50 600 200 Q800 350 700 550 Q600 700 400 600 Q200 500 200 100Z" fill="rgba(0,0,0,0.015)" />
+      <path d="M850 150 Q1000 100 1050 250 Q1100 450 950 500 Q800 550 850 350 Q830 250 850 150Z" fill="rgba(0,0,0,0.012)" />
+      <path d="M300 600 Q450 500 550 650 Q650 800 500 750 Q300 700 300 600Z" fill="rgba(0,0,0,0.008)" />
+      <path d="M100 500 Q200 450 350 520 Q500 600 400 700 Q300 800 150 750 Q0 700 100 500Z" fill="rgba(0,0,0,0.006)" />
+    </svg>
+
+    <!-- 页首 -->
+    <div class="chat-page-top">
+      <div class="chat-seal">聊</div>
+      <div class="chat-page-title-group">
+        <h1 class="chat-page-title">与AI对话</h1>
+        <p class="chat-page-subtitle">太 极 智 语</p>
+      </div>
+      <div class="chat-hex-deco">
+        <span>☰</span><span>☷</span><span>☵</span><span>☲</span>
+      </div>
+    </div>
+
+    <!-- 聊天主体 -->
+    <div ref="chatContainer" class="chat-box">
+      <!-- 顶部装饰线 -->
+      <div class="chat-box-rule">
+        <svg viewBox="0 0 680 12" preserveAspectRatio="none"><path d="M0 6 Q170 0 340 6 Q510 12 680 6" fill="none" stroke="rgba(0,0,0,0.04)" stroke-width="0.5"/></svg>
+      </div>
+
+      <div class="chat-messages">
+        <!-- 空状态 -->
+        <div v-if="messages.length === 0" class="chat-empty">
+          <div class="chat-empty-ornament">
+            <div class="empty-ring" />
+            <div class="empty-ring empty-ring-2" />
+            <span class="empty-taiji">☯</span>
+          </div>
+          <p class="empty-line-1">静 待 君 言</p>
+          <p class="empty-line-2">输入您的问题，开启太极智慧之旅</p>
+          <div class="empty-brush">
+            <svg width="120" height="8" viewBox="0 0 120 8"><path d="M0 4 Q30 1 60 4 Q90 7 120 4" fill="none" stroke="rgba(0,0,0,0.06)" stroke-width="0.5"/></svg>
+          </div>
+        </div>
+
+        <!-- 消息列表 -->
+        <div v-for="m in messages" :key="m.id" class="chat-msg" :class="{ 'chat-msg--user': m.role === 'user', 'chat-msg--ai': m.role === 'ai' }">
+          <div class="chat-avatar" :class="{ 'chat-avatar--user': m.role === 'user', 'chat-avatar--ai': m.role === 'ai' }">
+            <span v-if="m.role === 'user'" class="chat-avatar-text">君</span>
+            <span v-else class="chat-avatar-text">智</span>
+          </div>
+          <div class="chat-bubble" :class="{ 'chat-bubble--user': m.role === 'user', 'chat-bubble--ai': m.role === 'ai' }">
+            <p>{{ m.content }}</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 输入区 -->
+      <div class="chat-input-area">
+        <div class="chat-input-rule">
+          <svg viewBox="0 0 680 8" preserveAspectRatio="none"><path d="M0 4 Q170 0 340 4 Q510 8 680 4" fill="none" stroke="rgba(0,0,0,0.03)" stroke-width="0.5"/></svg>
+        </div>
+        <div class="chat-input-wrap">
+          <textarea ref="chatInputRef" v-model="inputMessage" class="chat-input" placeholder="输入您的问题…" rows="1" @keydown="onChatKeydown" :disabled="chatLoading" />
+          <button class="chat-send-btn" :disabled="!inputMessage.trim() || chatLoading" @click="sendMessage">
+            <span>发</span>
+          </button>
+        </div>
+        <div class="chat-input-hint">Enter 发送 · Shift+Enter 换行</div>
+      </div>
+    </div>
+
+    <!-- 底部墨迹 -->
+    <svg class="chat-bg-ink chat-bg-ink--bottom" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice">
+      <path d="M200 300 Q400 350 600 250 Q800 150 900 300 Q1000 450 700 400 Q400 350 200 300Z" fill="rgba(0,0,0,0.01)" />
+    </svg>
+  </div>
 </template>
 
 <style>
@@ -670,6 +822,7 @@ body {
   width: 32px; height: 32px;
   transition: transform 0.08s ease-out;
 }
+
 .brush-tip {
   width: 100%; height: 100%;
   background: radial-gradient(ellipse 40% 70% at 50% 20%, rgba(0,0,0,0.13) 0%, rgba(0,0,0,0.06) 40%, transparent 70%);
@@ -690,6 +843,35 @@ body {
 .tech-grid { position: fixed; inset: 0; pointer-events: none; z-index: 0; background-image: linear-gradient(rgba(40,50,70,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(40,50,70,0.035) 1px, transparent 1px); background-size: 64px 64px; mask-image: radial-gradient(ellipse 70% 50% at 50% 40%, black 15%, transparent 65%); -webkit-mask-image: radial-gradient(ellipse 70% 50% at 50% 40%, black 15%, transparent 65%); }
 
 .ink-splash { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+
+/* ===== 顶部导航 ===== */
+.top-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 32px;
+  background: rgba(244,239,230,0.85); backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+  opacity: 0; transform: translateY(-12px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.top-nav--visible { opacity: 1; transform: translateY(0); }
+.top-nav-brand {
+  font-family: 'Ma Shan Zheng', cursive; font-size: 20px;
+  letter-spacing: 8px; color: var(--ink-strong);
+  cursor: pointer; user-select: none;
+  transition: opacity 0.3s;
+}
+.top-nav-brand:hover { opacity: 0.7; }
+.top-nav-links { display: flex; gap: 6px; }
+.top-nav-item {
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 11px; letter-spacing: 4px; color: var(--ink-faint);
+  padding: 6px 16px; cursor: pointer;
+  transition: all 0.3s ease; user-select: none;
+  border: 1px solid transparent; border-radius: 2px;
+}
+.top-nav-item:hover { color: var(--ink-mid); border-color: var(--ink-ghost); }
+.top-nav-item.active { color: var(--ink); border-color: var(--ink-faint); background: rgba(0,0,0,0.02); }
 
 /* ===== HERO ===== */
 .hero { position: relative; z-index: 2; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 24px; }
@@ -896,6 +1078,179 @@ footer { position: relative; z-index: 2; padding: 0 24px 40px; text-align: cente
 .footer-link { font-family: 'Noto Sans SC', sans-serif; font-size: 10px; color: var(--ink-light); text-decoration: none; letter-spacing: 5px; transition: color 0.3s; font-weight: 300; }
 .footer-link:hover { color: var(--ink-strong); }
 
+/* ===== 聊天页 ===== */
+.chat-page {
+  position: relative; z-index: 2; min-height: 100vh;
+  display: flex; flex-direction: column;
+  padding: 72px 24px 40px; overflow: hidden;
+  cursor: auto;
+}
+.chat-bg-ink {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 0; opacity: 0.6;
+}
+.chat-bg-ink--bottom {
+  top: auto; bottom: 0; height: 40vh;
+}
+
+/* 页首 */
+.chat-page-top {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: 20px;
+  padding: 0 4px; margin-bottom: 28px; margin-top: 8px;
+}
+.chat-seal {
+  flex-shrink: 0; width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Ma Shan Zheng', cursive; font-size: 20px;
+  color: var(--seal); border: 2px solid var(--seal);
+  position: relative; background: rgba(184,50,42,0.04);
+}
+.chat-seal::after {
+  content: ''; position: absolute; inset: 3px;
+  border: 1px solid var(--seal); opacity: 0.25;
+}
+.chat-page-title-group { flex: 1; }
+.chat-page-title {
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 18px; letter-spacing: 8px; font-weight: 300;
+  color: var(--ink-mid); margin-bottom: 2px;
+}
+.chat-page-subtitle {
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 9px; letter-spacing: 12px; color: var(--ink-faint); font-weight: 300;
+}
+.chat-hex-deco { display: flex; gap: 8px; opacity: 0.08; }
+.chat-hex-deco span { font-size: 18px; }
+
+/* 聊天框 */
+.chat-box {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 680px; margin: 0 auto;
+  background: rgba(255,255,255,0.3); backdrop-filter: blur(16px);
+  border: 1px solid rgba(0,0,0,0.04);
+  display: flex; flex-direction: column;
+  min-height: 460px; flex: 1;
+  box-shadow: 0 1px 12px rgba(0,0,0,0.02), 0 4px 32px rgba(0,0,0,0.01);
+}
+.chat-box-rule { height: 12px; flex-shrink: 0; }
+.chat-box-rule svg { width: 100%; height: 100%; display: block; }
+
+/* 消息列表 */
+.chat-messages {
+  flex: 1; padding: 16px 20px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 14px;
+  min-height: 240px; max-height: 520px;
+}
+
+/* 空状态 */
+.chat-empty {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; height: 100%; min-height: 280px;
+  gap: 14px; user-select: none;
+}
+.chat-empty-ornament { position: relative; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
+.empty-taiji { font-size: 28px; opacity: 0.08; position: relative; z-index: 1; }
+.empty-ring { position: absolute; inset: -6px; border: 1px solid rgba(0,0,0,0.04); border-radius: 50%; animation: empty-ring-pulse 3s ease-in-out infinite; }
+.empty-ring-2 { inset: -14px; animation-delay: 0.8s; }
+@keyframes empty-ring-pulse { 0%, 100% { transform: scale(1); opacity: 0.3; } 50% { transform: scale(1.08); opacity: 0.6; } }
+.empty-line-1 {
+  font-family: 'Ma Shan Zheng', cursive;
+  font-size: 22px; color: var(--ink-faint); letter-spacing: 12px;
+}
+.empty-line-2 {
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 10px; color: var(--ink-ghost); letter-spacing: 4px;
+}
+.empty-brush { margin-top: 4px; opacity: 0.4; }
+
+/* 消息气泡 */
+.chat-msg { display: flex; gap: 10px; align-items: flex-start; animation: msg-in 0.35s ease; }
+@keyframes msg-in { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
+.chat-msg--user { flex-direction: row-reverse; }
+
+.chat-avatar { flex-shrink: 0; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; }
+.chat-avatar-text {
+  font-family: 'Ma Shan Zheng', cursive; font-size: 15px;
+  width: 34px; height: 34px; line-height: 34px; text-align: center;
+  transition: all 0.3s;
+}
+.chat-avatar--user .chat-avatar-text {
+  background: var(--ink); color: var(--paper); border-radius: 50%;
+  font-size: 13px;
+}
+.chat-avatar--ai .chat-avatar-text {
+  border: 1px solid var(--ink-faint); color: var(--ink-mid);
+  border-radius: 50%; font-size: 13px;
+  background: rgba(255,255,255,0.5);
+}
+
+.chat-bubble {
+  max-width: 72%; padding: 10px 14px;
+  font-size: 13px; line-height: 1.8; letter-spacing: 0.5px;
+  font-weight: 200; position: relative;
+  transition: all 0.3s;
+}
+.chat-bubble--user {
+  background: var(--ink); color: var(--paper);
+  border-radius: 3px 3px 1px 3px;
+}
+.chat-bubble--ai {
+  background: rgba(0,0,0,0.02); color: var(--ink-mid);
+  border: 1px solid rgba(0,0,0,0.04);
+  border-radius: 3px 3px 3px 1px;
+}
+.chat-bubble--typing { min-width: 48px; }
+
+.chat-typing { display: inline-flex; gap: 4px; align-items: center; padding: 2px 0; }
+.chat-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--ink-faint);
+  animation: chat-dot-bounce 1.2s ease-in-out infinite;
+}
+@keyframes chat-dot-bounce { 0%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-6px); } }
+
+/* 输入区 */
+.chat-input-area { padding: 0 16px 14px; flex-shrink: 0; }
+.chat-input-rule { height: 8px; margin-bottom: 12px; }
+.chat-input-rule svg { width: 100%; height: 100%; display: block; }
+.chat-input-wrap { display: flex; gap: 8px; align-items: flex-end; }
+.chat-input {
+  flex: 1; resize: none; outline: none;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 13px; line-height: 1.6; padding: 8px 12px;
+  background: rgba(255,255,255,0.5);
+  border: 1px solid rgba(0,0,0,0.06);
+  color: var(--ink); letter-spacing: 0.5px; font-weight: 200;
+  transition: border-color 0.3s; border-radius: 2px;
+  min-height: 40px; max-height: 120px;
+}
+.chat-input:focus { border-color: var(--ink-faint); }
+.chat-input::placeholder { color: var(--ink-ghost); font-weight: 200; font-size: 12px; }
+.chat-input:disabled { opacity: 0.35; }
+.chat-send-btn {
+  flex-shrink: 0; width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Ma Shan Zheng', cursive; font-size: 18px;
+  background: var(--ink); color: var(--paper);
+  border: none; cursor: pointer;
+  transition: all 0.35s ease; border-radius: 2px;
+  position: relative; overflow: hidden;
+}
+.chat-send-btn::after {
+  content: ''; position: absolute; inset: 3px;
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: all 0.3s;
+}
+.chat-send-btn:hover:not(:disabled) { background: var(--ink-strong); }
+.chat-send-btn:hover:not(:disabled)::after { border-color: rgba(255,255,255,0.15); }
+.chat-send-btn:disabled { opacity: 0.15; cursor: default; }
+.chat-input-hint {
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 8px; color: var(--ink-ghost);
+  letter-spacing: 2px; margin-top: 7px; text-align: center;
+}
+
 /* ===== 滚动揭示 ===== */
 .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.9s cubic-bezier(0.22,1,0.36,1), transform 0.9s cubic-bezier(0.22,1,0.36,1); }
 .reveal.show { opacity: 1; transform: translateY(0); }
@@ -921,6 +1276,8 @@ footer { position: relative; z-index: 2; padding: 0 24px 40px; text-align: cente
   .load-reveal-text { font-size: 48px; letter-spacing: 24px; }
   .quote-text { font-size: 13px; }
   .hero-quote { font-size: 12px; letter-spacing: 4px; }
+  .chat-messages { max-height: 360px; min-height: 200px; }
+  .chat-bubble { max-width: 85%; font-size: 12px; }
 }
 
 @media (max-width: 400px) {
@@ -936,5 +1293,9 @@ footer { position: relative; z-index: 2; padding: 0 24px 40px; text-align: cente
   .quote-item { gap: 12px; }
   .quote-char { width: 32px; height: 32px; font-size: 14px; }
   .footer-links { flex-wrap: wrap; justify-content: center; }
+  .chat-box { min-height: 320px; }
+  .chat-messages { max-height: 280px; min-height: 160px; padding: 12px; }
+  .chat-bubble { max-width: 90%; padding: 8px 10px; }
+  .chat-input-area { padding: 8px 10px 12px; }
 }
 </style>
